@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hábitos">
+<meta name="theme-color" content="#0a0a0a">
+<title>Hábitos</title>
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--bg:#0a0a0a;--bg2:#141414;--bg3:#1e1e1e;--txt:#fff;--txt2:#a0a0a0;--txt3:#666;--brd:#2a2a2a;--blue:#00d4ff;--green:#00ff88;--yellow:#ffee00;--orange:#ff8800;--pink:#ff00aa;--red:#ff3366;--gray:#333;--sat:env(safe-area-inset-top,47px);--sab:env(safe-area-inset-bottom,34px)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5}
+.app{display:flex;flex-direction:column;height:100%;max-width:430px;margin:0 auto;padding-top:var(--sat)}
+.score-hdr{background:linear-gradient(var(--bg),var(--bg2));padding:12px 20px 16px;text-align:center;border-bottom:1px solid var(--brd)}
+.score-box{display:flex;align-items:center;justify-content:center;gap:16px}
+.score-circle{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;position:relative}
+.score-circle::before{content:'';position:absolute;inset:4px;background:var(--bg);border-radius:50%}
+.score-val{position:relative;z-index:1}
+.score-info{text-align:left}
+.score-lbl{font-size:.7rem;color:var(--txt3);text-transform:uppercase;letter-spacing:1px}
+.score-date{font-size:1rem;font-weight:600}
+.score-streak{font-size:.8rem;color:var(--orange);display:flex;align-items:center;gap:4px;margin-top:2px}
+.main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.view{display:none;padding:16px;animation:fadeIn .3s}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
+.nav{display:flex;justify-content:space-around;background:var(--bg2);border-top:1px solid var(--brd);padding:8px 0 calc(8px + var(--sab))}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border:none;background:none;cursor:pointer}
+.nav-icon{width:26px;height:26px;opacity:.5}
+.nav-item span{font-size:.65rem;color:var(--txt3)}
+.nav-item.active .nav-icon{opacity:1}
+.nav-item.active span{color:var(--txt)}
+.day-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px}
+.day-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--brd);background:var(--bg2);color:var(--txt);font-size:1.1rem;cursor:pointer}
+.day-title{text-align:center}
+.day-title h2{font-size:1.1rem;font-weight:600}
+.day-title p{font-size:.8rem;color:var(--txt2)}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.stat-card{background:var(--bg2);border-radius:12px;padding:12px;text-align:center;border:1px solid var(--brd)}
+.stat-val{font-size:1.3rem;font-weight:700;color:var(--blue)}
+.stat-lbl{font-size:.65rem;color:var(--txt3);text-transform:uppercase;margin-top:2px}
+.stat-card.good .stat-val{color:var(--green)}
+.stat-card.bad .stat-val{color:var(--red)}
+.habit-list{display:flex;flex-direction:column;gap:10px}
+.habit-card{background:var(--bg2);border-radius:14px;padding:14px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--brd)}
+.habit-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.habit-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px currentColor}
+.habit-details{min-width:0}
+.habit-name{font-size:.95rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.habit-meta{display:flex;align-items:center;gap:8px;margin-top:2px}
+.habit-badge{font-size:.6rem;padding:2px 5px;border-radius:4px;text-transform:uppercase}
+.habit-badge.inc{background:rgba(0,255,136,.15);color:var(--green)}
+.habit-badge.red{background:rgba(255,51,102,.15);color:var(--red)}
+.habit-streak{font-size:.65rem;color:var(--orange)}
+.habit-goal{font-size:.65rem;color:var(--txt3)}
+.habit-goal.done{color:var(--green)}
+.habit-counter{display:flex;align-items:center;gap:10px}
+.cnt-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--brd);background:var(--bg3);color:var(--txt);font-size:1.3rem;cursor:pointer}
+.cnt-btn.plus{border-color:var(--green);color:var(--green)}
+.cnt-btn.minus{border-color:var(--red);color:var(--red)}
+.cnt-val{font-size:1.4rem;font-weight:700;min-width:36px;text-align:center}
+.empty{text-align:center;padding:50px 20px;color:var(--txt2)}
+.empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:.5}
+.empty h3{font-size:1rem;margin-bottom:6px;color:var(--txt)}
+.empty p{font-size:.85rem;margin-bottom:16px}
+.btn{background:var(--blue);color:var(--bg);border:none;padding:12px 24px;border-radius:12px;font-size:.95rem;font-weight:600;cursor:pointer}
+.cmp-bar{background:var(--bg2);border-radius:12px;padding:12px 16px;margin-bottom:16px;border:1px solid var(--brd)}
+.cmp-title{font-size:.7rem;color:var(--txt3);text-transform:uppercase;margin-bottom:8px}
+.cmp-content{display:flex;align-items:center;justify-content:space-between}
+.cmp-val{font-size:1.1rem;font-weight:700}
+.cmp-val.pos{color:var(--green)}
+.cmp-val.neg{color:var(--red)}
+.cmp-detail{font-size:.8rem;color:var(--txt2)}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cal-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--brd);background:var(--bg2);color:var(--txt);font-size:1.1rem;cursor:pointer}
+.cal-title{font-size:1rem;font-weight:600}
+.hab-sel{margin-bottom:16px}
+.hab-sel select{width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--brd);background:var(--bg2);color:var(--txt);font-size:.95rem}
+.heatmap{background:var(--bg2);border-radius:12px;padding:16px;border:1px solid var(--brd);overflow-x:auto}
+.hm-week{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px}
+.hm-lbl{font-size:.6rem;color:var(--txt3);text-align:center}
+.hm-grid{display:grid;gap:3px}
+.hm-grid.week,.hm-grid.month{grid-template-columns:repeat(7,1fr)}
+.hm-grid.year{grid-template-columns:repeat(7,1fr)}
+.hm-cell{aspect-ratio:1;border-radius:3px;min-width:12px;min-height:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.5rem;font-weight:600}
+.hm-cell.empty{background:var(--bg3);opacity:.3}
+.hm-cell.future{background:transparent;border:1px dashed var(--brd);opacity:.2}
+.hm-cell.nodata{background:var(--gray)}
+.hm-grid.year .hm-cell{min-width:0;min-height:0;font-size:0;border-radius:2px}
+.yr-mlabel{font-size:.6rem;color:var(--txt3);line-height:1}
+.hm-legend{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:12px;font-size:.6rem;color:var(--txt3)}
+.hm-leg-cell{width:10px;height:10px;border-radius:2px}
+.stats-sec{margin-top:20px}
+.stats-sec-title{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:12px}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.s-card{background:var(--bg2);border-radius:12px;padding:14px;border:1px solid var(--brd)}
+.s-card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.s-card-icon{font-size:1rem}
+.s-card-title{font-size:.65rem;color:var(--txt3);text-transform:uppercase}
+.s-card-val{font-size:1.4rem;font-weight:700}
+.s-card-sub{font-size:.7rem;color:var(--txt2);margin-top:2px}
+.days-box{background:var(--bg2);border-radius:12px;padding:14px;border:1px solid var(--brd);margin-top:10px}
+.days-title{font-size:.65rem;color:var(--txt3);text-transform:uppercase;margin-bottom:10px}
+.days-bars{display:flex;align-items:flex-end;justify-content:space-between;height:50px;gap:4px}
+.day-bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.day-bar{width:100%;border-radius:3px 3px 0 0;min-height:4px}
+.day-bar-lbl{font-size:.55rem;color:var(--txt3)}
+.corr-card{background:var(--bg2);border-radius:12px;padding:14px;border:1px solid var(--brd);margin-top:10px}
+.corr-title{font-size:.65rem;color:var(--txt3);text-transform:uppercase;margin-bottom:10px}
+.corr-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--brd)}
+.corr-item:last-child{border-bottom:none}
+.corr-icon{font-size:1rem}
+.corr-text{flex:1;font-size:.8rem}
+.corr-val{font-size:.75rem;font-weight:600;padding:3px 6px;border-radius:4px}
+.corr-val.pos{background:rgba(0,255,136,.15);color:var(--green)}
+.corr-val.neg{background:rgba(255,51,102,.15);color:var(--red)}
+.chart-box{background:var(--bg2);border-radius:12px;padding:14px;border:1px solid var(--brd);margin-top:10px}
+.chart-title{font-size:.65rem;color:var(--txt3);text-transform:uppercase;margin-bottom:10px}
+.chart-svg{width:100%;height:100px}
+.chart-line{fill:none;stroke-width:2;stroke-linecap:round}
+.chart-avg{fill:none;stroke-width:2;stroke-dasharray:4,4;opacity:.6}
+.chart-area{opacity:.15}
+.chart-legend{display:flex;justify-content:center;gap:16px;margin-top:8px;font-size:.65rem;color:var(--txt2)}
+.chart-leg-item{display:flex;align-items:center;gap:4px}
+.chart-leg-line{width:14px;height:2px;border-radius:1px}
+.chart-leg-line.dash{background:repeating-linear-gradient(90deg,var(--orange),var(--orange) 3px,transparent 3px,transparent 6px)}
+.set-sec{margin-bottom:24px}
+.set-sec h3{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--txt3);margin-bottom:10px}
+.set-list{display:flex;flex-direction:column;gap:8px}
+.set-item{background:var(--bg2);border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--brd);cursor:pointer}
+.set-item-info{display:flex;align-items:center;gap:12px}
+.set-item-color{width:18px;height:18px;border-radius:50%;box-shadow:0 0 8px currentColor}
+.set-item-details h4{font-size:.9rem;font-weight:500;margin-bottom:2px}
+.set-item-details p{font-size:.7rem;color:var(--txt2)}
+.set-item-action{color:var(--txt3);font-size:1rem}
+.add-btn{width:100%;padding:14px;border-radius:12px;border:2px dashed var(--brd);background:transparent;color:var(--txt2);font-size:.9rem;cursor:pointer;margin-top:10px}
+.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ach-card{background:var(--bg2);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--brd)}
+.ach-card.locked{opacity:.4}
+.ach-card.unlocked{border-color:var(--yellow);box-shadow:0 0 12px rgba(255,238,0,.2)}
+.ach-icon{font-size:1.5rem;margin-bottom:4px}
+.ach-name{font-size:.65rem;font-weight:600}
+.ach-desc{font-size:.55rem;color:var(--txt3)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:flex-end;justify-content:center;z-index:1000;opacity:0;visibility:hidden;transition:.3s}
+.modal-bg.active{opacity:1;visibility:visible}
+.modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + var(--sab));width:100%;max-width:430px;max-height:85vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s}
+.modal-bg.active .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--brd);border-radius:2px;margin:0 auto 16px}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-hdr h2{font-size:1.1rem;font-weight:600}
+.modal-close{width:28px;height:28px;border-radius:50%;border:none;background:var(--bg3);color:var(--txt2);font-size:1rem;cursor:pointer}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.75rem;color:var(--txt2);margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--brd);background:var(--bg3);color:var(--txt);font-size:.9rem}
+.form-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.form-row .form-group{margin-bottom:0}
+.color-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.color-opt{aspect-ratio:1;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:0 0 10px currentColor}
+.color-opt.sel{border-color:var(--txt);transform:scale(1.1)}
+.type-sel{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.type-opt{padding:12px;border-radius:10px;border:2px solid var(--brd);background:var(--bg3);cursor:pointer;text-align:center}
+.type-opt.sel{border-color:var(--blue);background:rgba(0,212,255,.1)}
+.type-opt-icon{font-size:1.2rem;margin-bottom:4px}
+.type-opt-lbl{font-size:.8rem;font-weight:500}
+.type-opt-desc{font-size:.65rem;color:var(--txt2);margin-top:2px}
+.form-actions{display:flex;gap:8px;margin-top:20px}
+.form-actions button{flex:1;padding:12px;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer}
+.btn-sec{background:var(--bg3);border:1px solid var(--brd);color:var(--txt)}
+.btn-del{background:rgba(255,51,102,.15);border:1px solid var(--red);color:var(--red)}
+.chk-grp{display:flex;align-items:center;gap:10px}
+.chk-grp input[type="checkbox"]{width:18px;height:18px;accent-color:var(--blue)}
+.chk-grp label{margin-bottom:0;font-size:.85rem}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg3);color:var(--txt);padding:10px 20px;border-radius:10px;font-size:.8rem;opacity:0;transition:.3s;z-index:2000}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.confirm-modal{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;visibility:hidden;transition:.2s}
+.confirm-modal.active{opacity:1;visibility:visible}
+.confirm-box{background:var(--bg2);border-radius:16px;padding:24px;width:90%;max-width:300px;text-align:center}
+.confirm-box h3{font-size:1rem;margin-bottom:8px}
+.confirm-box p{font-size:.85rem;color:var(--txt2);margin-bottom:20px}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btns button{flex:1;padding:12px;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;border:none}
+.confirm-btns .cancel{background:var(--bg3);color:var(--txt)}
+.confirm-btns .danger{background:var(--red);color:#fff}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="score-hdr">
+<div class="score-box">
+<div class="score-circle" id="scoreCircle"><span class="score-val" id="scoreVal">0</span></div>
+<div class="score-info">
+<div class="score-lbl">Puntuación</div>
+<div class="score-date" id="scoreDate">Hoy</div>
+<div class="score-streak">🔥 <span id="gStreak">0 días</span></div>
+</div>
+</div>
+</div>
+<main class="main">
+<section id="viewDay" class="view active"></section>
+<section id="viewWeek" class="view"></section>
+<section id="viewMonth" class="view"></section>
+<section id="viewYear" class="view"></section>
+<section id="viewSettings" class="view"></section>
+</main>
+<nav class="nav">
+<button class="nav-item active" data-view="viewDay"><svg class="nav-icon" style="color:#00aaff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 10 16 14 12"/></svg><span>Días</span></button>
+<button class="nav-item" data-view="viewWeek"><svg class="nav-icon" style="color:#00ff88" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Semanas</span></button>
+<button class="nav-item" data-view="viewMonth"><svg class="nav-icon" style="color:#ffee00" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Meses</span></button>
+<button class="nav-item" data-view="viewYear"><svg class="nav-icon" style="color:#ff8800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><circle cx="12" cy="14" r="4"/></svg><span>Años</span></button>
+<button class="nav-item" data-view="viewSettings"><svg class="nav-icon" style="color:#ff00aa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09c-.658.003-1.25.396-1.51 1z"/></svg><span>Ajustes</span></button>
+</nav>
+</div>
+<div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-handle"></div><div class="modal-hdr"><h2 id="modalTitle"></h2><button class="modal-close" onclick="closeModal()">×</button></div><div id="modalContent"></div></div></div>
+<div class="confirm-modal" id="confirmModal"><div class="confirm-box"><h3 id="confirmTitle">¿Estás seguro?</h3><p id="confirmMsg"></p><div class="confirm-btns"><button class="cancel" onclick="closeConfirm()">Cancelar</button><button class="danger" id="confirmBtn">Eliminar</button></div></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".json" style="display:none">
+<script>
+const DB='HabitosDB',DBV=2;let db=null;
+const COLORS=['#00d4ff','#00ff88','#ffee00','#ff8800','#ff00aa','#aa00ff','#00ffcc','#ff3366'];
+const DAYS=['L','M','X','J','V','S','D'],MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const ACHS=[{id:'streak7',icon:'🔥',name:'7 días',desc:'Racha 7d',chk:s=>s.cur>=7},{id:'streak30',icon:'🌟',name:'30 días',desc:'Racha 30d',chk:s=>s.cur>=30},{id:'streak90',icon:'👑',name:'90 días',desc:'Racha 90d',chk:s=>s.cur>=90},{id:'total100',icon:'💯',name:'100',desc:'100 reps',chk:(s,t)=>t>=100},{id:'total500',icon:'🎯',name:'500',desc:'500 reps',chk:(s,t)=>t>=500},{id:'total1000',icon:'🚀',name:'1000',desc:'1000 reps',chk:(s,t)=>t>=1000}];
+
+function initDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,DBV);r.onerror=()=>rej(r.error);r.onsuccess=()=>{db=r.result;res(db)};r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('habits')){d.createObjectStore('habits',{keyPath:'id',autoIncrement:true})}if(!d.objectStoreNames.contains('records')){const s=d.createObjectStore('records',{keyPath:'id',autoIncrement:true});s.createIndex('habitId','habitId');s.createIndex('habitDate',['habitId','date'],{unique:true})}if(!d.objectStoreNames.contains('achievements'))d.createObjectStore('achievements',{keyPath:'id'})}})}
+function dbOp(st,m,fn){return new Promise((res,rej)=>{const tx=db.transaction(st,m),s=tx.objectStore(st),r=fn(s);if(r&&r.onsuccess!==undefined){r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}else{tx.oncomplete=()=>res(r);tx.onerror=()=>rej(tx.error)}})}
+const getHabits=()=>dbOp('habits','readonly',s=>s.getAll());
+const addHabit=h=>dbOp('habits','readwrite',s=>s.add(h));
+const updHabit=h=>dbOp('habits','readwrite',s=>s.put(h));
+const delHabitDB=id=>dbOp('habits','readwrite',s=>s.delete(id));
+const getRecsByHabit=hid=>dbOp('records','readonly',s=>s.index('habitId').getAll(hid));
+const getAllRecs=()=>dbOp('records','readonly',s=>s.getAll());
+function getRec(hid,date){return new Promise((res,rej)=>{const tx=db.transaction('records','readonly'),r=tx.objectStore('records').index('habitDate').get([hid,date]);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error)})}
+async function setRec(hid,date,cnt){const ex=await getRec(hid,date);if(ex){ex.count=cnt;return dbOp('records','readwrite',s=>s.put(ex))}return dbOp('records','readwrite',s=>s.add({habitId:hid,date:date,count:cnt}))}
+async function delHabit(id){const recs=await getRecsByHabit(id);for(const r of recs)await dbOp('records','readwrite',s=>s.delete(r.id));await delHabitDB(id)}
+const getAchs=()=>dbOp('achievements','readonly',s=>s.getAll());
+const saveAch=a=>dbOp('achievements','readwrite',s=>s.put(a));
+
+const fmtDate=d=>d.toISOString().split('T')[0];
+const isToday=d=>fmtDate(d)===fmtDate(new Date());
+const isFuture=d=>{const t=new Date();t.setHours(0,0,0,0);const c=new Date(d);c.setHours(0,0,0,0);return c>t};
+const clamp=(v,mi,ma)=>Math.max(mi,Math.min(ma,v));
+function hexRgb(h){const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);return r?{r:parseInt(r[1],16),g:parseInt(r[2],16),b:parseInt(r[3],16)}:null}
+function rgbHex(r,g,b){return'#'+[r,g,b].map(x=>Math.round(clamp(x,0,255)).toString(16).padStart(2,'0')).join('')}
+function interp(c1,c2,f){const a=hexRgb(c1),b=hexRgb(c2);return rgbHex(a.r+(b.r-a.r)*f,a.g+(b.g-a.g)*f,a.b+(b.b-a.b)*f)}
+function calcColor(h,cnt,mx,has){if(!has)return'#333';const base=h.color||'#00d4ff';if(h.type==='increase'){if(cnt===0)return'#ff3366';const f=Math.min(cnt/Math.max(mx,5),1);return interp(interp(base,'#fff',.7),base,f)}else{if(cnt===0)return'#00ff88';const f=Math.min(cnt/Math.max(mx,5),1);return interp(base,interp(base,'#fff',.7),f)}}
+async function getMaxCnt(hid){const recs=await getRecsByHabit(hid);return recs.length?Math.max(...recs.map(r=>r.count),5):5}
+function getWeekStart(d){const dt=new Date(d),day=dt.getDay(),diff=dt.getDate()-day+(day===0?-6:1);dt.setDate(diff);dt.setHours(0,0,0,0);return dt}
+function toast(m){const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+function getCount(rec){return rec&&typeof rec.count==='number'?rec.count:0}
+
+async function calcStreak(hid){const recs=await getRecsByHabit(hid),hab=(await getHabits()).find(h=>h.id===hid);if(!recs.length||!hab)return{cur:0,best:0};const dm={};recs.forEach(r=>dm[r.date]=r.count);let cur=0,best=0,tmp=0;const chk=new Date();while(cur<365){const ds=fmtDate(chk),cnt=dm[ds],hasCnt=typeof cnt==='number',good=hab.type==='increase'?(cnt>0):(cnt===0);if(hasCnt&&good){cur++;chk.setDate(chk.getDate()-1)}else if(!hasCnt&&isToday(chk)){chk.setDate(chk.getDate()-1)}else break}const all=Object.keys(dm).sort();for(const d of all){const cnt=dm[d],good=hab.type==='increase'?(cnt>0):(cnt===0);if(good){tmp++;best=Math.max(best,tmp)}else tmp=0}return{cur,best}}
+
+async function calcScore(date){const habs=(await getHabits()).filter(h=>!h.archived);if(!habs.length)return 0;const ds=fmtDate(date);let tot=0,mx=0;for(const h of habs){const rec=await getRec(h.id,ds),cnt=getCount(rec),goal=h.goalDaily||1;tot+=(h.type==='increase'?Math.min(cnt/goal,1):(cnt===0?1:Math.max(0,1-cnt/goal)))*100;mx+=100}return mx>0?Math.round(tot/mx*100):0}
+
+async function calcGlobalStreak(){const habs=(await getHabits()).filter(h=>!h.archived);if(!habs.length)return 0;let streak=0;const chk=new Date();chk.setDate(chk.getDate()-1);while(streak<365){if(await calcScore(chk)>=70){streak++;chk.setDate(chk.getDate()-1)}else break}return streak}
+
+async function calcWeekdayStats(hid){const recs=await getRecsByHabit(hid),hab=(await getHabits()).find(h=>h.id===hid),stats=Array(7).fill(null).map(()=>({tot:0,cnt:0}));recs.forEach(r=>{let idx=new Date(r.date).getDay()-1;if(idx<0)idx=6;stats[idx].tot+=r.count;stats[idx].cnt++});return stats.map((s,i)=>({day:DAYS[i],avg:s.cnt>0?s.tot/s.cnt:0,good:hab?.type==='increase'}))}
+
+async function calcComp(hid,period='week'){const recs=await getRecsByHabit(hid),today=new Date();let cs,ce,ps,pe;if(period==='week'){cs=getWeekStart(today);ce=new Date(cs);ce.setDate(ce.getDate()+6);ps=new Date(cs);ps.setDate(ps.getDate()-7);pe=new Date(cs);pe.setDate(pe.getDate()-1)}else{cs=new Date(today.getFullYear(),today.getMonth(),1);ce=new Date(today.getFullYear(),today.getMonth()+1,0);ps=new Date(today.getFullYear(),today.getMonth()-1,1);pe=new Date(today.getFullYear(),today.getMonth(),0)}let ct=0,pt=0;recs.forEach(r=>{const d=new Date(r.date);if(d>=cs&&d<=ce)ct+=r.count;if(d>=ps&&d<=pe)pt+=r.count});return{cur:ct,prev:pt,diff:Math.round(pt>0?((ct-pt)/pt*100):(ct>0?100:0))}}
+
+async function calcCorr(){const habs=await getHabits(),recs=await getAllRecs();if(habs.length<2)return[];const hd={};habs.forEach(h=>hd[h.id]={name:h.name,dates:{}});recs.forEach(r=>{if(hd[r.habitId])hd[r.habitId].dates[r.date]=r.count});const corrs=[],ids=Object.keys(hd);for(let i=0;i<ids.length;i++){for(let j=i+1;j<ids.length;j++){const h1=hd[ids[i]],h2=hd[ids[j]],common=Object.keys(h1.dates).filter(d=>h2.dates[d]!==undefined);if(common.length>=7){const pairs=common.map(d=>[h1.dates[d],h2.dates[d]]),n=pairs.length;let sx=0,sy=0,sxy=0,sx2=0,sy2=0;pairs.forEach(([x,y])=>{sx+=x;sy+=y;sxy+=x*y;sx2+=x*x;sy2+=y*y});const num=n*sxy-sx*sy,den=Math.sqrt((n*sx2-sx*sx)*(n*sy2-sy*sy)),c=den===0?0:num/den;if(Math.abs(c)>.3)corrs.push({h1:h1.name,h2:h2.name,corr:c})}}}return corrs.sort((a,b)=>Math.abs(b.corr)-Math.abs(a.corr)).slice(0,3)}
+
+async function getChartData(hid,days=30){const recs=await getRecsByHabit(hid),dm={};recs.forEach(r=>dm[r.date]=r.count);const data=[],today=new Date();for(let i=days-1;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);data.push({date:fmtDate(d),val:dm[fmtDate(d)]||0})}const avg=data.map((d,i)=>{const sl=data.slice(Math.max(0,i-6),i+1);return{date:d.date,val:Math.round(sl.reduce((s,x)=>s+x.val,0)/sl.length*10)/10}});return{raw:data,avg}}
+
+async function checkAchs(){const habs=await getHabits(),unlocked=await getAchs(),ids=new Set(unlocked.map(a=>a.id));for(const h of habs){const streak=await calcStreak(h.id),recs=await getRecsByHabit(h.id),tot=recs.reduce((s,r)=>s+r.count,0);for(const def of ACHS){const aid=`${h.id}-${def.id}`;if(!ids.has(aid)&&def.chk(streak,tot)){await saveAch({id:aid,habitId:h.id,defId:def.id,date:fmtDate(new Date())});toast(`🎉 ${def.name}`)}}}}
+
+let habits=[],selDay=new Date(),selWeek=new Date(),selMonth=new Date(),selYear=new Date().getFullYear();
+function switchView(vid){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(vid).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.querySelector(`[data-view="${vid}"]`).classList.add('active');({viewDay:renderDay,viewWeek:renderWeek,viewMonth:renderMonth,viewYear:renderYear,viewSettings:renderSettings})[vid]()}
+
+async function updateScore(){const score=await calcScore(selDay),gs=await calcGlobalStreak();document.getElementById('scoreVal').textContent=score;const col=score>=80?'#00ff88':score>=50?'#ffee00':'#ff3366';document.getElementById('scoreVal').style.textShadow=`0 0 20px ${col}`;document.getElementById('scoreCircle').style.background=`conic-gradient(${col} ${score*3.6}deg,#1e1e1e 0deg)`;document.getElementById('scoreDate').textContent=isToday(selDay)?'Hoy':selDay.toLocaleDateString('es-ES',{weekday:'short',day:'numeric'});document.getElementById('gStreak').textContent=`${gs} días`}
+
+function changeDay(d){selDay.setDate(selDay.getDate()+d);renderDay()}
+async function renderDay(){habits=await getHabits();await updateScore();const v=document.getElementById('viewDay'),ds=fmtDate(selDay),fut=isFuture(selDay),active=habits.filter(h=>!h.archived);let html=`<div class="day-nav"><button class="day-btn" onclick="changeDay(-1)">←</button><div class="day-title"><h2>${isToday(selDay)?'Hoy':selDay.toLocaleDateString('es-ES',{weekday:'long',day:'numeric'})}</h2><p>${selDay.toLocaleDateString('es-ES',{month:'long',year:'numeric'})}</p></div><button class="day-btn" onclick="changeDay(1)">→</button></div>`;if(!active.length){html+=`<div class="empty"><div class="empty-icon">📊</div><h3>Sin hábitos</h3><p>Añade tu primer hábito</p><button class="btn" onclick="switchView('viewSettings')">Ir a Ajustes</button></div>`;v.innerHTML=html;return}let done=0,best=0;for(const h of active){const rec=await getRec(h.id,ds),cnt=getCount(rec),goal=h.goalDaily||1;if((h.type==='increase'&&cnt>=goal)||(h.type==='reduce'&&cnt===0))done++;const st=await calcStreak(h.id);best=Math.max(best,st.cur)}const comp=active.length?await calcComp(active[0].id):{diff:0};html+=`<div class="stats-row"><div class="stat-card ${done===active.length?'good':''}"><div class="stat-val">${done}/${active.length}</div><div class="stat-lbl">Completados</div></div><div class="stat-card"><div class="stat-val">🔥${best}</div><div class="stat-lbl">Mejor racha</div></div><div class="stat-card ${comp.diff>=0?'good':'bad'}"><div class="stat-val">${comp.diff>=0?'+':''}${comp.diff}%</div><div class="stat-lbl">vs sem.ant.</div></div></div><div class="habit-list">`;for(const h of active){const rec=await getRec(h.id,ds),cnt=getCount(rec),mx=await getMaxCnt(h.id),col=calcColor(h,cnt,mx,rec!==null),st=await calcStreak(h.id),goal=h.goalDaily||1,met=(h.type==='increase'?cnt>=goal:cnt===0);html+=`<div class="habit-card"><div class="habit-info"><div class="habit-dot" style="background:${h.color};color:${h.color}"></div><div class="habit-details"><div class="habit-name">${h.name}</div><div class="habit-meta"><span class="habit-badge ${h.type==='increase'?'inc':'red'}">${h.type==='increase'?'↑':'↓'}</span>${st.cur>0?`<span class="habit-streak">🔥${st.cur}</span>`:''}<span class="habit-goal ${met?'done':''}">Meta:${goal}</span></div></div></div><div class="habit-counter"><button class="cnt-btn minus" data-id="${h.id}" data-d="-1"${fut?' disabled':''}>−</button><span class="cnt-val" style="color:${col}">${cnt}</span><button class="cnt-btn plus" data-id="${h.id}" data-d="1"${fut?' disabled':''}>+</button></div></div>`}html+='</div>';v.innerHTML=html;v.querySelectorAll('.cnt-btn').forEach(btn=>btn.addEventListener('click',function(){const id=parseInt(this.dataset.id),d=parseInt(this.dataset.d);updCnt(id,d)}))}
+
+async function updCnt(hid,d){const ds=fmtDate(selDay),rec=await getRec(hid,ds),oldCnt=getCount(rec),newCnt=Math.max(0,oldCnt+d);await setRec(hid,ds,newCnt);await checkAchs();renderDay()}
+
+function changeWeek(d){selWeek.setDate(selWeek.getDate()+d*7);renderWeek()}
+async function renderWeek(){habits=await getHabits();const v=document.getElementById('viewWeek'),active=habits.filter(h=>!h.archived),ws=getWeekStart(selWeek),we=new Date(ws);we.setDate(we.getDate()+6);let html=`<div class="cal-header"><button class="cal-btn" onclick="changeWeek(-1)">←</button><h2 class="cal-title">${ws.toLocaleDateString('es-ES',{day:'numeric',month:'short'})} - ${we.toLocaleDateString('es-ES',{day:'numeric',month:'short'})}</h2><button class="cal-btn" onclick="changeWeek(1)">→</button></div>`;if(!active.length){v.innerHTML=html+'<div class="empty"><p>Sin hábitos</p></div>';return}html+=`<div class="hab-sel"><select id="weekSel" onchange="renderWeek()">${active.map(h=>`<option value="${h.id}">${h.name}</option>`).join('')}</select></div>`;const sel=document.querySelector('#weekSel'),hid=sel?parseInt(sel.value):active[0].id,hab=active.find(h=>h.id===hid)||active[0],mx=await getMaxCnt(hab.id),comp=await calcComp(hab.id,'week');html+=`<div class="cmp-bar"><div class="cmp-title">vs semana anterior</div><div class="cmp-content"><span class="cmp-val ${comp.diff>0?'pos':comp.diff<0?'neg':''}">${comp.diff>0?'+':''}${comp.diff}%</span><span class="cmp-detail">${comp.cur} vs ${comp.prev}</span></div></div><div class="heatmap"><div class="hm-week">${DAYS.map(d=>`<div class="hm-lbl">${d}</div>`).join('')}</div><div class="hm-grid week">`;for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(d.getDate()+i);const ds=fmtDate(d),rec=await getRec(hab.id,ds),cnt=getCount(rec),has=rec!==null,fut=isFuture(d),col=calcColor(hab,cnt,mx,has);html+=`<div class="hm-cell${fut?' future':has?'':' nodata'}" style="background:${fut?'transparent':col}" onclick="goDay('${ds}')">${fut?'':cnt}</div>`}html+='</div>'+renderLegend(hab)+'</div>'+await renderStats(hab,14);v.innerHTML=html;const ns=document.querySelector('#weekSel');if(ns)ns.value=hab.id}
+
+function changeMonth(d){selMonth.setMonth(selMonth.getMonth()+d);renderMonth()}
+async function renderMonth(){habits=await getHabits();const v=document.getElementById('viewMonth'),active=habits.filter(h=>!h.archived);let html=`<div class="cal-header"><button class="cal-btn" onclick="changeMonth(-1)">←</button><h2 class="cal-title">${selMonth.toLocaleDateString('es-ES',{month:'long',year:'numeric'})}</h2><button class="cal-btn" onclick="changeMonth(1)">→</button></div>`;if(!active.length){v.innerHTML=html+'<div class="empty"><p>Sin hábitos</p></div>';return}html+=`<div class="hab-sel"><select id="monthSel" onchange="renderMonth()">${active.map(h=>`<option value="${h.id}">${h.name}</option>`).join('')}</select></div>`;const sel=document.querySelector('#monthSel'),hid=sel?parseInt(sel.value):active[0].id,hab=active.find(h=>h.id===hid)||active[0],mx=await getMaxCnt(hab.id),comp=await calcComp(hab.id,'month'),yr=selMonth.getFullYear(),mo=selMonth.getMonth(),fd=new Date(yr,mo,1),ld=new Date(yr,mo+1,0);let sd=fd.getDay()-1;if(sd<0)sd=6;html+=`<div class="cmp-bar"><div class="cmp-title">vs mes anterior</div><div class="cmp-content"><span class="cmp-val ${comp.diff>0?'pos':comp.diff<0?'neg':''}">${comp.diff>0?'+':''}${comp.diff}%</span><span class="cmp-detail">${comp.cur} vs ${comp.prev}</span></div></div><div class="heatmap"><div class="hm-week">${DAYS.map(d=>`<div class="hm-lbl">${d}</div>`).join('')}</div><div class="hm-grid month">`;for(let i=0;i<sd;i++)html+='<div class="hm-cell empty"></div>';for(let day=1;day<=ld.getDate();day++){const d=new Date(yr,mo,day),ds=fmtDate(d),rec=await getRec(hab.id,ds),cnt=getCount(rec),has=rec!==null,fut=isFuture(d),col=calcColor(hab,cnt,mx,has);html+=`<div class="hm-cell${fut?' future':has?'':' nodata'}" style="background:${fut?'transparent':col}" onclick="goDay('${ds}')">${fut?'':cnt}</div>`}html+='</div>'+renderLegend(hab)+'</div>'+await renderStats(hab,30,true);v.innerHTML=html;const ns=document.querySelector('#monthSel');if(ns)ns.value=hab.id}
+
+function changeYear(d){selYear+=d;renderYear()}
+async function renderYear(){habits=await getHabits();const v=document.getElementById('viewYear'),active=habits.filter(h=>!h.archived);let html=`<div class="cal-header"><button class="cal-btn" onclick="changeYear(-1)">←</button><h2 class="cal-title">${selYear}</h2><button class="cal-btn" onclick="changeYear(1)">→</button></div>`;if(!active.length){v.innerHTML=html+'<div class="empty"><p>Sin hábitos</p></div>';return}html+=`<div class="hab-sel"><select id="yearSel" onchange="renderYear()">${active.map(h=>`<option value="${h.id}">${h.name}</option>`).join('')}</select></div>`;const sel=document.querySelector('#yearSel'),hid=sel?parseInt(sel.value):active[0].id,hab=active.find(h=>h.id===hid)||active[0],mx=await getMaxCnt(hab.id);
+
+// Build weeks array: each week = array of 7 day objects
+const jan1=new Date(selYear,0,1);
+let startOff=jan1.getDay()-1; if(startOff<0)startOff=6; // days to pad before Jan 1 (Mon=0)
+const gridStart=new Date(jan1);gridStart.setDate(gridStart.getDate()-startOff);
+const dec31=new Date(selYear,11,31);
+let endOff=dec31.getDay(); // Sun=0
+const daysAfter=endOff===0?0:7-endOff; // pad to complete last week
+const gridEnd=new Date(dec31);gridEnd.setDate(gridEnd.getDate()+daysAfter);
+
+const weeks=[];
+const cursor=new Date(gridStart);
+while(cursor<=gridEnd){
+    const week=[];
+    for(let d=0;d<7;d++){
+        week.push(new Date(cursor));
+        cursor.setDate(cursor.getDate()+1);
+    }
+    weeks.push(week);
+}
+
+// Build month label positions: for each month, find which week row it starts
+const monthRows=[];
+for(let m=0;m<12;m++){
+    for(let w=0;w<weeks.length;w++){
+        if(weeks[w].some(d=>d.getFullYear()===selYear&&d.getMonth()===m&&d.getDate()===1)){
+            monthRows.push({month:m,week:w});
+            break;
+        }
+    }
+}
+// Calculate how many weeks each month label spans
+for(let i=0;i<monthRows.length;i++){
+    const nextWeek=i<monthRows.length-1?monthRows[i+1].week:weeks.length;
+    monthRows[i].span=nextWeek-monthRows[i].week;
+}
+
+// Use CSS grid for the whole year: 8 columns (1 for labels + 7 for days)
+html+=`<div class="heatmap"><div class="yr-grid" style="display:grid;grid-template-columns:30px repeat(7,1fr);gap:3px;align-items:stretch">`;
+// Day-of-week header row
+html+=`<div></div>`;
+for(const d of DAYS) html+=`<div class="hm-lbl">${d}</div>`;
+
+// Render rows with month labels
+let monthIdx=0;
+for(let w=0;w<weeks.length;w++){
+    // Check if this week starts a new month label
+    if(monthIdx<monthRows.length&&monthRows[monthIdx].week===w){
+        const mr=monthRows[monthIdx];
+        html+=`<div class="yr-mlabel" style="grid-row:span ${mr.span};display:flex;align-items:flex-start;padding-top:2px">${MONTHS[mr.month]}</div>`;
+        monthIdx++;
+    }
+    // 7 day cells
+    for(const day of weeks[w]){
+        const inYear=day.getFullYear()===selYear;
+        if(!inYear){
+            html+='<div class="hm-cell empty"></div>';
+        }else{
+            const ds=fmtDate(day),fut=isFuture(day);
+            const rec=await getRec(hab.id,ds),cnt=getCount(rec),has=rec!==null;
+            const col=calcColor(hab,cnt,mx,has);
+            html+=`<div class="hm-cell${fut?' future':has?'':' nodata'}" style="background:${fut?'transparent':col}"></div>`;
+        }
+    }
+}
+
+html+=`</div>`+renderLegend(hab)+`</div>`;
+
+const recs=await getRecsByHabit(hab.id),yrRecs=recs.filter(r=>new Date(r.date).getFullYear()===selYear),tot=yrRecs.reduce((s,r)=>s+r.count,0),days=yrRecs.length,st=await calcStreak(hab.id);
+html+=`<div class="stats-sec"><div class="stats-sec-title">Resumen anual</div><div class="stats-grid"><div class="s-card"><div class="s-card-hdr"><span class="s-card-icon">📊</span><span class="s-card-title">Total</span></div><div class="s-card-val" style="color:${hab.color}">${tot}</div></div><div class="s-card"><div class="s-card-hdr"><span class="s-card-icon">📅</span><span class="s-card-title">Días</span></div><div class="s-card-val">${days}</div></div><div class="s-card"><div class="s-card-hdr"><span class="s-card-icon">📈</span><span class="s-card-title">Media</span></div><div class="s-card-val">${days>0?(tot/days).toFixed(1):0}</div></div><div class="s-card"><div class="s-card-hdr"><span class="s-card-icon">🏆</span><span class="s-card-title">Récord</span></div><div class="s-card-val" style="color:var(--yellow)">${st.best}</div></div></div></div>`;
+
+v.innerHTML=html;
+
+const ns=document.querySelector('#yearSel');if(ns)ns.value=hab.id}
+
+async function renderStats(h,days,showCorr=false){const st=await calcStreak(h.id),wd=await calcWeekdayStats(h.id),cd=await getChartData(h.id,days),ma=Math.max(...wd.map(s=>s.avg),1);let html=`<div class="stats-sec"><div class="stats-sec-title">Estadísticas</div><div class="stats-grid"><div class="s-card"><div class="s-card-hdr"><span class="s-card-icon">🔥</span><span class="s-card-title">Racha actual</span></div><div class="s-card-val" style="color:var(--orange)">${st.cur}</div><div class="s-card-sub">días</div></div><div class="s-card"><div class="s-card-hdr"><span class="s-card-icon">🏆</span><span class="s-card-title">Mejor racha</span></div><div class="s-card-val" style="color:var(--yellow)">${st.best}</div><div class="s-card-sub">récord</div></div></div><div class="days-box"><div class="days-title">Por día de semana</div><div class="days-bars">${wd.map(s=>{const ht=(s.avg/ma*40)+10,good=h.type==='increase'?s.avg>ma*.7:s.avg<ma*.3;return`<div class="day-bar-item"><div class="day-bar" style="height:${ht}px;background:${good?'var(--green)':h.color}"></div><div class="day-bar-lbl">${s.day}</div></div>`}).join('')}</div></div>${renderChart(cd,h.color)}`;if(showCorr){const corrs=await calcCorr();if(corrs.length)html+=`<div class="corr-card"><div class="corr-title">Correlaciones</div>${corrs.map(c=>`<div class="corr-item"><span class="corr-icon">${c.corr>0?'📈':'📉'}</span><span class="corr-text">${c.corr>0?`${c.h1} ↑ = ${c.h2} ↑`:`${c.h1} ↑ = ${c.h2} ↓`}</span><span class="corr-val ${c.corr>0?'pos':'neg'}">${Math.round(Math.abs(c.corr)*100)}%</span></div>`).join('')}</div>`}html+='</div>';return html}
+
+function renderChart(data,col){const mx=Math.max(...data.raw.map(d=>d.val),...data.avg.map(d=>d.val),1),w=100,h=80,p=5,xs=(w-p*2)/(data.raw.length-1),ys=(h-p*2)/mx,rawPts=data.raw.map((d,i)=>`${p+i*xs},${h-p-d.val*ys}`).join(' '),avgPts=data.avg.map((d,i)=>`${p+i*xs},${h-p-d.val*ys}`).join(' ');return`<div class="chart-box"><div class="chart-title">Evolución (${data.raw.length}d)</div><svg class="chart-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polygon class="chart-area" points="${p},${h-p} ${rawPts} ${p+(data.raw.length-1)*xs},${h-p}" fill="${col}"/><polyline class="chart-line" points="${rawPts}" stroke="${col}"/><polyline class="chart-avg" points="${avgPts}" stroke="var(--orange)"/></svg><div class="chart-legend"><div class="chart-leg-item"><div class="chart-leg-line" style="background:${col}"></div><span>Diario</span></div><div class="chart-leg-item"><div class="chart-leg-line dash"></div><span>Media</span></div></div></div>`}
+function renderLegend(h){const lvls=h.type==='increase'?[{c:'#333'},{c:'#ff3366'},{c:interp(h.color,'#fff',.5)},{c:h.color}]:[{c:'#333'},{c:'#00ff88'},{c:h.color},{c:interp(h.color,'#fff',.5)}];return`<div class="hm-legend"><span>-</span>${lvls.map(l=>`<div class="hm-leg-cell" style="background:${l.c}"></div>`).join('')}<span>+</span></div>`}
+function goDay(ds){selDay=new Date(ds);switchView('viewDay')}
+
+async function renderSettings(){habits=await getHabits();const v=document.getElementById('viewSettings'),active=habits.filter(h=>!h.archived),archived=habits.filter(h=>h.archived),achs=await getAchs();let html='<div class="set-sec"><h3>Mis Hábitos</h3><div class="set-list">';if(!active.length)html+='<div class="empty" style="padding:20px"><p>Sin hábitos</p></div>';else for(const h of active)html+=`<div class="set-item" data-edit="${h.id}"><div class="set-item-info"><div class="set-item-color" style="background:${h.color}"></div><div class="set-item-details"><h4>${h.name}</h4><p>${h.type==='increase'?'↑':'↓'} Meta:${h.goalDaily||1}/día</p></div></div><span class="set-item-action">→</span></div>`;html+='</div><button class="add-btn" id="addHabitBtn">+ Añadir</button></div>';if(archived.length){html+='<div class="set-sec"><h3>Archivados</h3><div class="set-list">';for(const h of archived)html+=`<div class="set-item" style="opacity:.5" data-edit="${h.id}"><div class="set-item-info"><div class="set-item-color" style="background:${h.color}"></div><div class="set-item-details"><h4>${h.name}</h4><p>Archivado</p></div></div><span class="set-item-action">→</span></div>`;html+='</div></div>'}html+='<div class="set-sec"><h3>Logros</h3><div class="ach-grid">';for(const def of ACHS){const unlocked=achs.some(a=>a.defId===def.id);html+=`<div class="ach-card ${unlocked?'unlocked':'locked'}"><div class="ach-icon">${def.icon}</div><div class="ach-name">${def.name}</div><div class="ach-desc">${def.desc}</div></div>`}html+=`</div></div><div class="set-sec"><h3>Datos</h3><div class="set-list"><div class="set-item" id="exportBtn"><div class="set-item-info"><div class="set-item-details"><h4>Exportar</h4><p>Copia de seguridad</p></div></div><span class="set-item-action">→</span></div><div class="set-item" id="importBtn"><div class="set-item-info"><div class="set-item-details"><h4>Importar</h4><p>Restaurar datos</p></div></div><span class="set-item-action">→</span></div></div></div>`;v.innerHTML=html;document.getElementById('addHabitBtn').addEventListener('click',openAdd);document.getElementById('exportBtn').addEventListener('click',exportData);document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('fileInput').click());v.querySelectorAll('[data-edit]').forEach(el=>el.addEventListener('click',()=>openEdit(parseInt(el.dataset.edit))))}
+
+function openModal(){document.getElementById('modalBg').classList.add('active')}
+function closeModal(){document.getElementById('modalBg').classList.remove('active')}
+function openAdd(){document.getElementById('modalTitle').textContent='Nuevo hábito';document.getElementById('modalContent').innerHTML=getForm();setupFormEvents();openModal()}
+async function openEdit(id){const h=habits.find(x=>x.id===id);if(!h)return;document.getElementById('modalTitle').textContent='Editar';document.getElementById('modalContent').innerHTML=getForm(h);setupFormEvents(h);openModal()}
+
+function getForm(h=null){const isE=h!==null,col=h?.color||COLORS[0],type=h?.type||'increase';return`<form id="habitForm"><div class="form-group"><label>Nombre</label><input type="text" id="fName" value="${h?.name||''}" placeholder="Ej: Vasos de agua" required></div><div class="form-group"><label>Tipo</label><div class="type-sel"><div class="type-opt ${type==='increase'?'sel':''}" data-type="increase"><div class="type-opt-icon">↑</div><div class="type-opt-lbl">Aumentar</div><div class="type-opt-desc">Más=mejor</div></div><div class="type-opt ${type==='reduce'?'sel':''}" data-type="reduce"><div class="type-opt-icon">↓</div><div class="type-opt-lbl">Reducir</div><div class="type-opt-desc">Menos=mejor</div></div></div><input type="hidden" id="fType" value="${type}"></div><div class="form-group"><label>Metas</label><div class="form-row"><div class="form-group"><label style="font-size:.65rem">Diaria</label><input type="number" id="fGoalD" value="${h?.goalDaily||1}" min="0"></div><div class="form-group"><label style="font-size:.65rem">Semanal</label><input type="number" id="fGoalW" value="${h?.goalWeekly||7}" min="0"></div><div class="form-group"><label style="font-size:.65rem">Mensual</label><input type="number" id="fGoalM" value="${h?.goalMonthly||30}" min="0"></div></div></div><div class="form-group"><label>Color</label><div class="color-picker">${COLORS.map(c=>`<div class="color-opt ${c===col?'sel':''}" style="background:${c}" data-color="${c}"></div>`).join('')}</div><input type="hidden" id="fColor" value="${col}"></div>${isE?`<div class="form-group"><div class="chk-grp"><input type="checkbox" id="fArch" ${h.archived?'checked':''}><label>Archivar</label></div></div>`:''}<div class="form-actions">${isE?`<button type="button" class="btn-del" id="delBtn">Eliminar</button>`:''}<button type="button" class="btn-sec" id="cancelBtn">Cancelar</button><button type="submit" class="btn">${isE?'Guardar':'Crear'}</button></div></form>`}
+
+function setupFormEvents(h=null){document.querySelectorAll('.type-opt').forEach(el=>el.addEventListener('click',function(){document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('sel'));this.classList.add('sel');document.getElementById('fType').value=this.dataset.type}));document.querySelectorAll('.color-opt').forEach(el=>el.addEventListener('click',function(){document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('sel'));this.classList.add('sel');document.getElementById('fColor').value=this.dataset.color}));document.getElementById('cancelBtn').addEventListener('click',closeModal);document.getElementById('habitForm').addEventListener('submit',e=>{e.preventDefault();saveHabit(h?h.id:null)});if(h){document.getElementById('delBtn').addEventListener('click',()=>showConfirm('¿Eliminar hábito?','Se borrarán todos los datos',()=>confirmDel(h.id)))}}
+
+async function saveHabit(id){const h={name:document.getElementById('fName').value.trim(),type:document.getElementById('fType').value,color:document.getElementById('fColor').value,goalDaily:parseInt(document.getElementById('fGoalD').value)||1,goalWeekly:parseInt(document.getElementById('fGoalW').value)||7,goalMonthly:parseInt(document.getElementById('fGoalM').value)||30,archived:document.getElementById('fArch')?.checked||false};if(!h.name){toast('Nombre requerido');return}if(id){h.id=id;await updHabit(h);toast('Actualizado')}else{await addHabit(h);toast('Creado')}closeModal();renderSettings()}
+
+function showConfirm(title,msg,onConfirm){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmMsg').textContent=msg;const btn=document.getElementById('confirmBtn');btn.onclick=()=>{closeConfirm();onConfirm()};document.getElementById('confirmModal').classList.add('active')}
+function closeConfirm(){document.getElementById('confirmModal').classList.remove('active')}
+
+async function confirmDel(id){await delHabit(id);toast('Eliminado');closeModal();renderSettings()}
+
+async function exportData(){const habs=await getHabits(),recs=await getAllRecs(),achs=await getAchs();const blob=new Blob([JSON.stringify({v:2,habits:habs,records:recs,achievements:achs},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`habitos-${fmtDate(new Date())}.json`;a.click();URL.revokeObjectURL(url);toast('Exportado')}
+
+async function handleImport(e){const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data.habits)throw new Error('Formato inválido');const ex=await getHabits();for(const h of ex)await delHabit(h.id);const idMap={};for(const h of data.habits){const old=h.id;delete h.id;idMap[old]=await addHabit(h)}for(const r of(data.records||[]))if(idMap[r.habitId])await setRec(idMap[r.habitId],r.date,r.count);for(const a of(data.achievements||[]))if(idMap[a.habitId]){a.habitId=idMap[a.habitId];a.id=`${a.habitId}-${a.defId}`;await saveAch(a)}toast('Importado');renderSettings()}catch(err){toast('Error: '+err.message)}e.target.value=''}
+
+async function init(){try{await initDB();document.querySelectorAll('.nav-item').forEach(i=>i.addEventListener('click',()=>switchView(i.dataset.view)));document.getElementById('modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg')closeModal()});document.getElementById('confirmModal').addEventListener('click',e=>{if(e.target.id==='confirmModal')closeConfirm()});document.getElementById('fileInput').addEventListener('change',handleImport);await renderDay();await checkAchs()}catch(err){console.error('Init error:',err);toast('Error al iniciar')}}
+
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init)}else{init()}
+</script>
+</body>
+</html>
